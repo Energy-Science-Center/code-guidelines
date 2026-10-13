@@ -237,9 +237,21 @@ if result.error: ...
   value) and confirm the test fails, then restore the code. A test that still passes guards nothing.
 - Framework: pytest. Test layout mirrors the production code (`tests/<package path>/test_<module>.py`).
 - One `class Test<Component>` per component under test; one behaviour per test.
-- Every test has three marked parts: `# Arrange`, `# Act`, `# Assert`.
+- Every test has three marked parts: `# Arrange`, `# Act`, `# Assert`. When the call itself raises,
+  Act and Assert merge into one `# Act & Assert` around `pytest.raises`.
 - Several cases of the same test: `@pytest.mark.parametrize`.
 - Expected results are hard-coded or read from a fixed source; never computed with the production logic.
+- **Error tests assert the type or the whole message.** When the message is the behaviour under
+  test, match all of it (`match=re.escape(expected_message)`); otherwise assert only the exception
+  type. A partial substring hides which part matters, breaks on rewording, and can be matched by an
+  unrelated error.
+- **A test reads on its own.** A reader understands it without opening the code under test or the
+  fixtures; a domain fact or a deliberate quirk of the setup (a fixture missing a column on purpose)
+  is stated in a comment.
+- **Failure-test inputs are obviously synthetic** (`any_unknown_name`, not a plausible real name),
+  so the test keeps its meaning whatever the production data later contains.
+- **Call the function under test directly**, not through a test helper that wraps it and hides what
+  each test exercises.
 - F.I.R.S.T.: Fast, Independent (any order), Repeatable (own data, no external state: `tmp_path`,
   in-memory databases, `monkeypatch`), Self-validating (pass/fail only), Timely (written right before
   the code).
